@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChancesYA — Sistema de Vendedores</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#F0B429;--gold2:#C9921A;
+  --bg:#060A12;--surface:#0C1220;--surface2:#131A2C;--surface3:#1A2236;
+  --border:rgba(240,180,41,0.13);--border2:rgba(255,255,255,0.06);
+  --text:#EEF2FA;--muted:#5B6580;--muted2:#8C96B0;
+  --green:#22C55E;--red:#EF4444;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+button{cursor:pointer;font-family:'Sora',sans-serif}
+input,select{font-family:'Sora',sans-serif}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex}
+
+/* ── LOGIN ── */
+#screen-login{align-items:center;justify-content:center;background:radial-gradient(ellipse 120% 60% at 50% -5%,rgba(240,180,41,0.07),transparent 65%),var(--bg);position:relative;overflow:hidden}
+#screen-login::before{content:'';position:fixed;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 49px,rgba(240,180,41,0.025) 50px),repeating-linear-gradient(90deg,transparent,transparent 49px,rgba(240,180,41,0.025) 50px);pointer-events:none}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:44px 38px;width:100%;max-width:400px;z-index:1;box-shadow:0 40px 80px rgba(0,0,0,.7);animation:popIn .45s cubic-bezier(.16,1,.3,1) both}
+@keyframes popIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}
+.login-logo{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:4px;color:var(--gold);text-align:center;text-shadow:0 0 40px rgba(240,180,41,.3)}
+.login-logo span{color:var(--text)}
+.login-sub{text-align:center;color:var(--muted2);font-size:0.72rem;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:32px;margin-top:4px}
+.fld{margin-bottom:16px}
+.fld label{display:block;font-size:0.65rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted2);margin-bottom:7px}
+.fld input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:13px 15px;color:var(--text);font-size:0.88rem;outline:none;transition:border-color .2s}
+.fld input:focus{border-color:rgba(240,180,41,.45)}
+.btn-g{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;padding:14px;font-size:0.88rem;font-weight:700;letter-spacing:.8px;color:#000;transition:all .2s;text-transform:uppercase;margin-top:6px}
+.btn-g:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(240,180,41,.3)}
+.login-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:9px 13px;font-size:0.78rem;color:var(--red);margin-bottom:14px;display:none}
+.login-hint{text-align:center;font-size:0.68rem;color:var(--muted);margin-top:18px}
+
+/* ── APP SHELL ── */
+#screen-app{flex-direction:column}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(6,10,18,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border2);padding:0 22px;height:58px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tb-logo{font-family:'Bebas Neue',sans-serif;font-size:1.55rem;letter-spacing:3px;color:var(--gold)}
+.tb-logo span{color:var(--text)}
+.tb-right{display:flex;align-items:center;gap:10px}
+.tb-name{font-size:0.82rem;font-weight:600}
+.tb-role{font-size:0.65rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.8px}
+.tb-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.78rem;color:#000;flex-shrink:0}
+.btn-out{background:none;border:1px solid var(--border2);border-radius:7px;padding:5px 11px;font-size:0.7rem;color:var(--muted2);transition:all .2s}
+.btn-out:hover{border-color:var(--red);color:var(--red)}
+
+.tabsbar{background:var(--surface);border-bottom:1px solid var(--border2);padding:0 22px;display:flex;gap:2px;overflow-x:auto;flex-shrink:0}
+.tabsbar::-webkit-scrollbar{height:0}
+.tbtn{background:none;border:none;border-bottom:2px solid transparent;padding:13px 15px;font-size:0.78rem;font-weight:500;color:var(--muted2);white-space:nowrap;transition:all .2s}
+.tbtn:hover{color:var(--text)}
+.tbtn.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+.content{flex:1;padding:24px 22px 60px;max-width:1080px;width:100%;margin:0 auto}
+
+/* ── PANELS ── */
+.panel{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.pnl-hd{background:var(--surface2);border-bottom:1px solid var(--border2);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.pnl-title{font-weight:700;font-size:0.88rem}
+.pnl-badge{font-family:'JetBrains Mono',monospace;font-size:0.68rem;background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.2);border-radius:20px;padding:3px 10px;color:var(--gold)}
+.pnl-body{padding:18px}
+
+/* ── VENDER ── */
+.vgrid{display:grid;grid-template-columns:1fr 340px;gap:18px}
+@media(max-width:840px){.vgrid{grid-template-columns:1fr}}
+
+.modo-tabs{display:flex;gap:6px;margin-bottom:16px}
+.modo-btn{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 8px;text-align:center;transition:all .2s}
+.modo-btn.active{background:rgba(240,180,41,.1);border-color:rgba(240,180,41,.5)}
+.m-icon{font-size:1.3rem;margin-bottom:4px}
+.m-label{font-size:0.72rem;font-weight:700;color:var(--muted2)}
+.modo-btn.active .m-label{color:var(--gold)}
+.m-sub{font-size:0.62rem;color:var(--muted);margin-top:2px}
+
+.lots-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.lots-row::-webkit-scrollbar{height:0}
+.lot-chip{flex-shrink:0;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:9px 13px;cursor:pointer;transition:all .2s;min-width:110px;text-align:center}
+.lot-chip:hover:not(.disabled){border-color:rgba(240,180,41,.35)}
+.lot-chip.sel{background:rgba(240,180,41,.09);border-color:rgba(240,180,41,.5)}
+.lot-chip.disabled{opacity:.45;cursor:not-allowed}
+.lc-name{font-size:0.72rem;font-weight:700;margin-bottom:3px}
+.lc-hora{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--muted2)}
+.lc-st{font-size:0.58rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-top:4px;padding:2px 7px;border-radius:10px;display:inline-block}
+.st-a{background:rgba(34,197,94,.12);color:var(--green)}
+.st-l{background:rgba(239,68,68,.12);color:var(--red)}
+.st-c{background:rgba(90,100,128,.12);color:var(--muted)}
+
+.num-disp{background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:20px;text-align:center;margin-bottom:14px}
+.nd-label{font-size:0.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2);margin-bottom:8px}
+.nd-num{font-family:'Bebas Neue',sans-serif;font-size:4.5rem;letter-spacing:18px;color:var(--gold);min-height:72px;display:flex;align-items:center;justify-content:center;text-shadow:0 0 30px rgba(240,180,41,.25)}
+.nd-ph{color:var(--muted);font-size:2.2rem;letter-spacing:10px}
+.nd-tipo{font-size:0.65rem;color:var(--muted2);margin-top:6px}
+.nd-tipo strong{color:var(--gold)}
+
+.pos-indicators{display:flex;justify-content:center;gap:8px;margin-bottom:12px}
+.pos-ind{width:52px;height:52px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px dashed var(--border2);transition:all .2s}
+.pos-ind.filled{background:rgba(240,180,41,.08);border-color:rgba(240,180,41,.3);color:var(--gold)}
+.pos-ind.editing{background:rgba(240,180,41,.15);border-color:rgba(240,180,41,.6);animation:blink .8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+.pi-num{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--gold)}
+.pi-lbl{font-size:0.55rem;color:var(--muted2);letter-spacing:.5px;text-transform:uppercase}
+
+.teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.key{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:15px 8px;font-size:1.05rem;font-weight:600;color:var(--text);transition:all .15s}
+.key:hover{background:var(--surface3);border-color:rgba(240,180,41,.3);color:var(--gold)}
+.key:active{transform:scale(.94)}
+.key.del{color:var(--red)}
+.key.cls{color:var(--muted2);font-size:0.72rem}
+
+.montos-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.mc{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;font-size:0.74rem;font-weight:600;color:var(--muted2);transition:all .2s}
+.mc:hover,.mc.sel{background:rgba(240,180,41,.1);border-color:rgba(240,180,41,.4);color:var(--gold)}
+.mc-custom{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-size:0.82rem;outline:none;transition:border-color .2s;margin-bottom:8px}
+.mc-custom:focus{border-color:rgba(240,180,41,.4)}
+.monto-info{font-size:0.7rem;color:var(--muted2);padding:6px 10px;background:rgba(240,180,41,.04);border:1px solid rgba(240,180,41,.08);border-radius:7px}
+.monto-info strong{color:var(--gold);font-family:'JetBrains Mono',monospace}
+
+/* Efectivo badge */
+.efectivo-badge{display:flex;align-items:center;gap:10px;background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:12px 16px;margin-top:14px}
+.ef-icon{font-size:1.4rem}
+.ef-text{font-size:0.78rem;color:#4ade80;font-weight:600}
+.ef-sub{font-size:0.68rem;color:var(--muted2);margin-top:1px}
+
+.comp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.fsm label{font-size:0.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin-bottom:6px;display:block}
+.fsm input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:0.82rem;outline:none;transition:border-color .2s}
+.fsm input:focus{border-color:rgba(240,180,41,.4)}
+.btn-add{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:9px;padding:13px;font-size:0.82rem;font-weight:700;letter-spacing:.5px;color:#000;transition:all .2s;margin-top:14px}
+.btn-add:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(240,180,41,.25)}
+
+/* Carrito */
+.cart-empty{text-align:center;padding:36px 16px;color:var(--muted);font-size:0.8rem}
+.cart-empty .ico{font-size:2.4rem;margin-bottom:10px;opacity:.35}
+.ci{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;gap:10px;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ci-num{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:4px;color:var(--gold);min-width:80px}
+.ci-info{flex:1}
+.ci-lot{font-size:0.72rem;font-weight:600}
+.ci-det{font-size:0.67rem;color:var(--muted2);margin-top:1px;font-family:'JetBrains Mono',monospace}
+.ci-del{background:none;border:1px solid var(--border2);border-radius:6px;width:26px;height:26px;color:var(--muted2);display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;font-size:.85rem}
+.ci-del:hover{border-color:var(--red);color:var(--red)}
+.cart-total{border-top:1px solid var(--border2);padding-top:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+.ct-lbl{font-size:0.7rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.8px}
+.ct-val{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold)}
+.btn-registrar{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;padding:14px;font-size:0.88rem;font-weight:700;letter-spacing:.8px;color:#000;transition:all .2s;margin-top:10px;text-transform:uppercase}
+.btn-registrar:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 28px rgba(240,180,41,.3)}
+.btn-registrar:disabled{opacity:.35;cursor:not-allowed}
+
+/* ── RESULTADOS ── */
+.res-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.res-title{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:2px}
+.res-title span{color:var(--gold)}
+.res-meta{font-size:0.7rem;color:var(--muted2);margin-top:3px}
+.btn-refresh{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;font-size:0.72rem;font-weight:600;color:var(--muted2);display:flex;align-items:center;gap:6px;transition:all .2s}
+.btn-refresh:hover{border-color:var(--gold);color:var(--gold)}
+.spin{animation:sp .7s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.status-bar{display:flex;align-items:center;gap:8px;font-size:0.72rem;color:var(--muted2);margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.sdot.loading{background:var(--gold);animation:blink .8s infinite}
+.sdot.error{background:var(--red)}
+
+.sec-lbl{font-size:0.63rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:20px 0 12px;display:flex;align-items:center;gap:10px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--border2)}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:8px}
+.rc{background:var(--surface);border:1px solid var(--border2);border-radius:12px;overflow:hidden;transition:all .2s;animation:fadeUp .4s ease both}
+.rc:hover{border-color:rgba(240,180,41,.3);transform:translateY(-1px)}
+.rc-hd{background:var(--surface2);border-bottom:1px solid var(--border2);padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.rc-name{font-weight:700;font-size:0.78rem}
+.rc-body{padding:14px;text-align:center}
+.rc-num{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:8px;color:var(--gold);text-shadow:0 0 20px rgba(240,180,41,.2)}
+.rc-sub{font-size:0.65rem;color:var(--muted2);margin-top:3px;font-family:'JetBrains Mono',monospace}
+.rc-date{font-size:0.6rem;color:var(--muted);margin-top:3px}
+.res-empty{text-align:center;padding:40px;color:var(--muted);font-size:0.82rem}
+
+/* ── VENTAS ── */
+.vs-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+@media(max-width:600px){.vs-stats{grid-template-columns:repeat(2,1fr)}}
+.vst{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:14px 16px}
+.vst-val{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--gold)}
+.vst-lbl{font-size:0.63rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin-top:1px}
+.vt-wrap{background:var(--surface);border:1px solid var(--border2);border-radius:12px;overflow:hidden}
+.vt-hd{background:var(--surface2);padding:12px 18px;display:grid;grid-template-columns:90px 1fr 100px 80px 85px;gap:10px;font-size:0.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2)}
+.vt-row{padding:12px 18px;border-top:1px solid var(--border2);display:grid;grid-template-columns:90px 1fr 100px 80px 85px;gap:10px;font-size:0.78rem;align-items:center;transition:background .15s}
+.vt-row:hover{background:rgba(255,255,255,.015)}
+.vt-num{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:3px;color:var(--gold)}
+.badge{font-size:0.6rem;font-weight:700;letter-spacing:.4px;padding:3px 7px;border-radius:20px;text-transform:uppercase}
+.b-ok{background:rgba(34,197,94,.12);color:var(--green)}
+.b-ef{background:rgba(240,180,41,.12);color:var(--gold)}
+.vt-empty{padding:30px;text-align:center;color:var(--muted);font-size:0.8rem}
+
+/* ── ADMIN ── */
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.admin-grid{grid-template-columns:1fr}}
+.cfg-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border2)}
+.cfg-row:last-child{border:none}
+.cfg-lbl{font-size:0.82rem;font-weight:600}
+.cfg-sub{font-size:0.68rem;color:var(--muted2);margin-top:2px}
+.cfg-inp{background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:7px 11px;color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:0.88rem;width:120px;text-align:right;outline:none;transition:border-color .2s}
+.cfg-inp:focus{border-color:rgba(240,180,41,.4)}
+.pos-config{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.pos-box{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 8px;text-align:center}
+.pos-box-lbl{font-size:0.6rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted2);margin-bottom:8px}
+.pos-box select,.pos-box input[type=text]{width:100%;background:var(--surface3);border:1px solid var(--border2);border-radius:7px;padding:6px 8px;color:var(--text);font-size:0.76rem;outline:none;margin-bottom:6px}
+.pos-box input[type=text]{color:var(--gold);font-family:'JetBrains Mono',monospace;text-align:center}
+.utbl{width:100%;border-collapse:collapse}
+.utbl th{text-align:left;font-size:0.6rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);padding:9px 11px;border-bottom:1px solid var(--border2)}
+.utbl td{padding:10px 11px;border-bottom:1px solid rgba(255,255,255,.025);font-size:0.8rem}
+.urole{font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase}
+.r-adm{background:rgba(240,180,41,.15);color:var(--gold)}
+.r-ven{background:rgba(59,130,246,.12);color:#60a5fa}
+.btn-sm{background:none;border:1px solid var(--border2);border-radius:6px;padding:4px 9px;font-size:0.68rem;color:var(--muted2);transition:all .2s}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold)}
+.btn-sm.d:hover{border-color:var(--red);color:var(--red)}
+.btn-save{background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:8px;padding:10px 22px;font-size:0.8rem;font-weight:700;color:#000;transition:all .2s;margin-top:12px}
+.btn-save:hover{transform:translateY(-1px)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);z-index:500;display:none;align-items:center;justify-content:center;padding:18px}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid rgba(240,180,41,.25);border-radius:18px;width:100%;max-width:440px;overflow:hidden;animation:mIn .22s cubic-bezier(.16,1,.3,1)}
+@keyframes mIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
+.m-hd{background:var(--surface2);border-bottom:1px solid var(--border2);padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.m-title{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--gold)}
+.m-x{background:none;border:1px solid var(--border2);border-radius:7px;width:28px;height:28px;color:var(--muted2);display:flex;align-items:center;justify-content:center;transition:all .2s}
+.m-x:hover{border-color:var(--red);color:var(--red)}
+.m-bd{padding:20px}
+.conf-tr{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:0.82rem}
+.conf-tr:last-child{border:none;font-weight:700;font-size:0.95rem}
+.conf-tr span:last-child{color:var(--gold);font-family:'JetBrains Mono',monospace}
+.success-wrap{text-align:center;padding:24px 16px}
+.s-icon{font-size:3.5rem;margin-bottom:12px;animation:bounce .4s ease}
+@keyframes bounce{0%{transform:scale(0)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.s-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:3px;color:var(--green);margin-bottom:6px}
+.s-ref{font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--muted2);background:var(--surface2);padding:6px 14px;border-radius:7px;display:inline-block;margin-bottom:14px}
+.s-detail{font-size:0.78rem;color:var(--muted2);line-height:1.6;margin-bottom:14px}
+.s-ef{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:8px;padding:12px;font-size:0.75rem;color:#4ade80;line-height:1.5}
+
+/* ── TOASTS ── */
+.tw{position:fixed;bottom:22px;right:22px;z-index:999;display:flex;flex-direction:column;gap:7px}
+.toast{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:13px 16px;min-width:260px;max-width:340px;display:flex;align-items:flex-start;gap:10px;box-shadow:0 8px 28px rgba(0,0,0,.4);animation:tIn .25s ease}
+@keyframes tIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.toast.hide{animation:tOut .25s ease forwards}
+@keyframes tOut{to{opacity:0;transform:translateX(14px)}}
+.toast.suc{border-color:rgba(34,197,94,.3)}
+.toast.err{border-color:rgba(239,68,68,.3)}
+.toast.inf{border-color:rgba(59,130,246,.3)}
+.ti{font-size:1.2rem;flex-shrink:0}
+.tt strong{display:block;font-size:0.82rem;margin-bottom:1px}
+.tt span{font-size:0.72rem;color:var(--muted2)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+  <div class="login-box">
+    <div class="login-logo">Chances<span>YA</span></div>
+    <div class="login-sub">Portal de Vendedores</div>
+    <div class="login-err" id="lerr">Usuario o contraseña incorrectos</div>
+    <div class="fld"><label>Usuario</label><input type="text" id="lu" placeholder="tu.usuario" autocomplete="username"></div>
+    <div class="fld"><label>Contraseña</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-g" onclick="doLogin()">Ingresar al sistema</button>
+    <div class="login-hint">Solo personal autorizado · Habla con el administrador si no tienes acceso</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="screen-app" class="screen">
+  <div class="topbar">
+    <div class="tb-logo">Chances<span>YA</span></div>
+    <div class="tb-right">
+      <div style="text-align:right"><div class="tb-name" id="tb-name">—</div><div class="tb-role" id="tb-role">vendedor</div></div>
+      <div class="tb-av" id="tb-av">?</div>
+      <button class="btn-out" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+  <div class="tabsbar">
+    <button class="tbtn active" onclick="showTab('vender',this)">🎲 Vender</button>
+    <button class="tbtn" onclick="showTab('resultados',this)">📋 Resultados</button>
+    <button class="tbtn" onclick="showTab('ventas',this)">📊 Mis Ventas</button>
+    <button class="tbtn admin-tab" onclick="showTab('admin',this)" style="display:none">⚙️ Admin</button>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ VENDER ══ -->
+    <div id="tab-vender" class="tab-content">
+      <div class="vgrid">
+        <!-- Izquierda -->
+        <div>
+          <div class="panel">
+            <div class="pnl-hd"><div class="pnl-title">Tipo de Chance</div></div>
+            <div class="pnl-body">
+              <div class="modo-tabs">
+                <button class="modo-btn active" onclick="setModo(3,this)"><div class="m-icon">🔢</div><div class="m-label">3 Cifras</div><div class="m-sub">Libre elección</div></button>
+                <button class="modo-btn" onclick="setModo(4,this)"><div class="m-icon">🎯</div><div class="m-label">4 Cifras</div><div class="m-sub">Según configuración</div></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="pnl-hd"><div class="pnl-title">Lotería</div><div class="pnl-badge" id="lot-badge">Sin selección</div></div>
+            <div class="pnl-body"><div class="lots-row" id="lots-row"></div></div>
+          </div>
+
+          <div class="panel">
+            <div class="pnl-hd"><div class="pnl-title" id="num-title">Número — 3 cifras libre</div></div>
+            <div class="pnl-body">
+              <div class="pos-indicators" id="pos-ind" style="display:none">
+                <div class="pos-ind" id="pi-0"><div class="pi-lbl">MIL</div><div class="pi-num">–</div></div>
+                <div class="pos-ind" id="pi-1"><div class="pi-lbl">CEN</div><div class="pi-num">–</div></div>
+                <div class="pos-ind" id="pi-2"><div class="pi-lbl">DEC</div><div class="pi-num">–</div></div>
+                <div class="pos-ind" id="pi-3"><div class="pi-lbl">UNI</div><div class="pi-num">–</div></div>
+              </div>
+              <div class="num-disp">
+                <div class="nd-label">Tu número</div>
+                <div class="nd-num" id="nd-num"><span class="nd-ph">– – –</span></div>
+                <div class="nd-tipo" id="nd-tipo">Ingresa <strong>3</strong> dígitos</div>
+              </div>
+              <div class="teclado">
+                <button class="key" onclick="kp('1')">1</button><button class="key" onclick="kp('2')">2</button><button class="key" onclick="kp('3')">3</button>
+                <button class="key" onclick="kp('4')">4</button><button class="key" onclick="kp('5')">5</button><button class="key" onclick="kp('6')">6</button>
+                <button class="key" onclick="kp('7')">7</button><button class="key" onclick="kp('8')">8</button><button class="key" onclick="kp('9')">9</button>
+                <button class="key cls" onclick="kc()">BORRAR</button><button class="key" onclick="kp('0')">0</button><button class="key del" onclick="kd()">⌫</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="pnl-hd"><div class="pnl-title">Monto — Pago en Efectivo</div></div>
+            <div class="pnl-body">
+              <div class="montos-row" id="mc-row"></div>
+              <input class="mc-custom" type="number" id="mc-inp" placeholder="Otro monto en pesos..." oninput="setMontoCustom(this.value)">
+              <div class="monto-info">Mínimo: <strong id="min-lbl">$500</strong> · Máximo: <strong id="max-lbl">$20.000</strong></div>
+              <div class="efectivo-badge">
+                <div class="ef-icon">💵</div>
+                <div><div class="ef-text">Pago 100% en Efectivo</div><div class="ef-sub">El vendedor recibe el dinero directamente del cliente</div></div>
+              </div>
+              <div style="border-top:1px solid var(--border2);margin-top:14px;padding-top:14px">
+                <div style="font-size:0.63rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin-bottom:10px">Datos del Comprador</div>
+                <div class="comp-row">
+                  <div class="fsm"><label>Nombre</label><input type="text" id="c-nom" placeholder="Nombre completo"></div>
+                  <div class="fsm"><label>Celular</label><input type="tel" id="c-cel" placeholder="3001234567"></div>
+                </div>
+              </div>
+              <button class="btn-add" onclick="addCarrito()">+ Agregar al carrito</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Derecha: Carrito -->
+        <div>
+          <div class="panel" style="position:sticky;top:70px">
+            <div class="pnl-hd"><div class="pnl-title">Carrito</div><div class="pnl-badge" id="cart-badge">0 jugadas</div></div>
+            <div class="pnl-body" id="cart-body"><div class="cart-empty"><div class="ico">🎰</div>Sin jugadas aún</div></div>
+            <div style="padding:0 18px 18px"><button class="btn-registrar" id="btn-reg" onclick="openConfirm()" disabled>Registrar Venta</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RESULTADOS ══ -->
+    <div id="tab-resultados" class="tab-content" style="display:none">
+      <div class="res-top">
+        <div>
+          <div class="res-title">Resultados de <span id="res-fecha">Hoy</span></div>
+          <div class="res-meta" id="res-meta">Conectando con loteriasdehoy.co...</div>
+        </div>
+        <button class="btn-refresh" onclick="cargarResultados(true)"><span id="ref-ico">↻</span> Actualizar</button>
+      </div>
+      <div class="status-bar"><div class="sdot loading" id="sdot"></div><span id="stxt">Cargando...</span></div>
+      <div id="chances-wrap" style="display:none">
+        <div class="sec-lbl">Chances del día</div>
+        <div class="res-grid" id="chances-grid"></div>
+      </div>
+      <div id="loterias-wrap" style="display:none">
+        <div class="sec-lbl">Loterías tradicionales</div>
+        <div class="res-grid" id="loterias-grid"></div>
+      </div>
+      <div id="res-empty" class="res-empty" style="display:none">Sin resultados disponibles aún. Intenta más tarde.</div>
+    </div>
+
+    <!-- ══ VENTAS ══ -->
+    <div id="tab-ventas" class="tab-content" style="display:none">
+      <div class="vs-stats">
+        <div class="vst"><div class="vst-val" id="vs-c">0</div><div class="vst-lbl">Ventas hoy</div></div>
+        <div class="vst"><div class="vst-val" id="vs-m">$0</div><div class="vst-lbl">Total recaudado</div></div>
+        <div class="vst"><div class="vst-val" id="vs-com">$0</div><div class="vst-lbl">Tu comisión</div></div>
+      </div>
+      <div class="vt-wrap">
+        <div class="vt-hd"><div>Número</div><div>Lotería</div><div>Monto</div><div>Tipo</div><div>Estado</div></div>
+        <div id="ventas-list"><div class="vt-empty">Sin ventas registradas</div></div>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN ══ -->
+    <div id="tab-admin" class="tab-content" style="display:none">
+      <div class="admin-grid">
+        <div>
+          <div class="panel">
+            <div class="pnl-hd"><div class="pnl-title">💰 Montos</div></div>
+            <div class="pnl-body">
+              <div class="cfg-row"><div><div class="cfg-lbl">Monto máximo</div><div class="cfg-sub">Por número apostado</div></div><input class="cfg-inp" id="cfg-max" type="number" value="20000"></div>
+              <div class="cfg-row"><div><div class="cfg-lbl">Monto mínimo</div><div class="cfg-sub">Apuesta mínima</div></div><input class="cfg-inp" id="cfg-min" type="number" value="500"></div>
+              <div class="cfg-row"><div><div class="cfg-lbl">Comisión vendedor %</div><div class="cfg-sub">Porcentaje sobre ventas</div></div><input class="cfg-inp" id="cfg-com" type="number" value="5"></div>
+              <button class="btn-save" onclick="saveConfig()">Guardar</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="pnl-hd"><div class="pnl-title">🎯 Control 4 Cifras</div></div>
+            <div class="pnl-body">
+              <div style="font-size:0.72rem;color:var(--muted2);margin-bottom:12px;line-height:1.5">Fijo = solo ese dígito. Lista = separados por coma (ej: 1,3,5). Libre = cualquier dígito.</div>
+              <div class="pos-config">
+                <div class="pos-box"><div class="pos-box-lbl">Millar</div><select id="p0-m"><option value="libre">Libre</option><option value="fijo">Fijo</option><option value="lista">Lista</option></select><input type="text" id="p0-v" placeholder="0-9"></div>
+                <div class="pos-box"><div class="pos-box-lbl">Centena</div><select id="p1-m"><option value="libre">Libre</option><option value="fijo">Fijo</option><option value="lista">Lista</option></select><input type="text" id="p1-v" placeholder="0-9"></div>
+                <div class="pos-box"><div class="pos-box-lbl">Decena</div><select id="p2-m"><option value="libre">Libre</option><option value="fijo">Fijo</option><option value="lista">Lista</option></select><input type="text" id="p2-v" placeholder="0-9"></div>
+                <div class="pos-box"><div class="pos-box-lbl">Unidad</div><select id="p3-m"><option value="libre">Libre</option><option value="fijo">Fijo</option><option value="lista">Lista</option></select><input type="text" id="p3-v" placeholder="0-9"></div>
+              </div>
+              <button class="btn-save" onclick="saveConfig()">Guardar configuración</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="pnl-hd"><div class="pnl-title">🔄 Resultados</div></div>
+            <div class="pnl-body">
+              <div style="font-size:0.78rem;color:var(--muted2);line-height:1.6;margin-bottom:12px">Actualización automática: <strong style="color:var(--gold)">6am · 2pm · 10pm</strong> todos los días.</div>
+              <button class="btn-save" onclick="forzarActualizacion()">↻ Forzar actualización ahora</button>
+              <div style="margin-top:10px;font-size:0.7rem;color:var(--muted)" id="adm-api-st"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="panel">
+            <div class="pnl-hd"><div class="pnl-title">👥 Vendedores</div><button class="btn-sm" onclick="toggleNuevo()">+ Nuevo</button></div>
+            <div class="pnl-body" style="padding:0"><table class="utbl"><thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th></th></tr></thead><tbody id="users-tb"></tbody></table></div>
+          </div>
+          <div class="panel" id="nuevo-panel" style="display:none">
+            <div class="pnl-hd"><div class="pnl-title">Nuevo Vendedor</div></div>
+            <div class="pnl-body">
+              <div class="comp-row" style="margin-bottom:10px">
+                <div class="fsm"><label>Usuario</label><input type="text" id="nu-l" placeholder="vendedor03"></div>
+                <div class="fsm"><label>Nombre</label><input type="text" id="nu-n" placeholder="Nombre Apellido"></div>
+              </div>
+              <div class="comp-row">
+                <div class="fsm"><label>Contraseña</label><input type="password" id="nu-p" placeholder="••••••••"></div>
+                <div class="fsm"><label>Rol</label>
+                  <select id="nu-r" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-size:0.82rem;outline:none">
+                    <option value="vendedor">Vendedor</option><option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn-save" onclick="addUser()" style="width:100%;margin-top:12px">Crear vendedor</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="m-hd"><div class="m-title" id="m-title">CONFIRMAR VENTA</div><button class="m-x" onclick="closeModal()">✕</button></div>
+    <div class="m-bd" id="m-bd"></div>
+  </div>
+</div>
+<div class="tw" id="tw"></div>
+
+<script>
+// ════════════════════════════════════════════
+//  ESTADO
+// ════════════════════════════════════════════
+const API = window.location.origin;
+
+let CFG = {
+  montoMax:20000, montoMin:500, comisionPct:5,
+  pos4:[{m:'libre',v:''},{m:'libre',v:''},{m:'libre',v:''},{m:'libre',v:''}]
+};
+
+let USERS = [
+  {id:1,login:'admin',    pass:'admin123', nombre:'Administrador', rol:'admin'},
+  {id:2,login:'vendedor1',pass:'vend123',  nombre:'Carlos Pérez',  rol:'vendedor'},
+  {id:3,login:'vendedor2',pass:'vend456',  nombre:'Laura Gómez',   rol:'vendedor'},
+];
+
+const LOTERIAS = [
+  {id:1,nombre:'Dorado Mañana',    hora:'10:30'},
+  {id:2,nombre:'Antioqueñita 1',   hora:'11:00'},
+  {id:3,nombre:'Cafeterito Tarde', hora:'11:30'},
+  {id:4,nombre:'Sinuano Día',      hora:'12:00'},
+  {id:5,nombre:'Chontico Día',     hora:'12:30'},
+  {id:6,nombre:'Paisita Día',      hora:'13:00'},
+  {id:7,nombre:'Fantástica Día',   hora:'13:30'},
+  {id:8,nombre:'Caribeña Día',     hora:'14:00'},
+  {id:9,nombre:'Dorado Tarde',     hora:'15:30'},
+  {id:10,nombre:'Astro Sol',       hora:'16:00'},
+  {id:11,nombre:'Antioqueñita 2',  hora:'16:30'},
+  {id:12,nombre:'Motilón Tarde',   hora:'17:00'},
+  {id:13,nombre:'Cafeterito Noche',hora:'19:00'},
+  {id:14,nombre:'Sinuano Noche',   hora:'19:30'},
+  {id:15,nombre:'Chontico Noche',  hora:'20:00'},
+  {id:16,nombre:'Paisita Noche',   hora:'20:30'},
+  {id:17,nombre:'Fantástica Noche',hora:'21:00'},
+  {id:18,nombre:'Caribeña Noche',  hora:'21:30'},
+  {id:19,nombre:'Astro Luna',      hora:'22:00'},
+];
+
+let cu=null, modo=3, selLot=null, numA='', montoA=0, carrito=[], ventas=[];
+
+// ── LOGIN ──
+function doLogin(){
+  const u=document.getElementById('lu').value.trim(), p=document.getElementById('lp').value;
+  const user=USERS.find(x=>x.login===u&&x.pass===p);
+  if(!user){document.getElementById('lerr').style.display='block';return;}
+  cu=user;
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  document.getElementById('tb-name').textContent=user.nombre;
+  document.getElementById('tb-role').textContent=user.rol;
+  document.getElementById('tb-av').textContent=user.nombre[0].toUpperCase();
+  if(user.rol==='admin') document.querySelector('.admin-tab').style.display='';
+  initApp();
+}
+document.getElementById('lp').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
+function doLogout(){cu=null;carrito=[];numA='';selLot=null;document.getElementById('screen-app').classList.remove('active');document.getElementById('screen-login').classList.add('active');document.getElementById('lu').value='';document.getElementById('lp').value='';document.getElementById('lerr').style.display='none';document.querySelector('.admin-tab').style.display='none';}
+
+function initApp(){renderLots();renderMontos();if(cu.rol==='admin'){renderUsers();loadCfgUI();}}
+
+// ── TABS ──
+function showTab(n,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+n).style.display='';
+  btn.classList.add('active');
+  if(n==='resultados') cargarResultados(false);
+  if(n==='ventas') renderVentas();
+}
+
+// ── LOTERÍAS ──
+function getSt(hora){const n=new Date(),t=hora.split(':').map(Number),tm=t[0]*60+t[1],nm=n.getHours()*60+n.getMinutes();if(nm>=tm-5&&nm<=tm+25)return'live';if(nm>tm+25)return'closed';return'open';}
+function renderLots(){const row=document.getElementById('lots-row');row.innerHTML='';LOTERIAS.forEach(l=>{const st=getSt(l.hora);const sC={open:'st-a',live:'st-l',closed:'st-c'};const sL={open:'Abierta',live:'En Vivo',closed:'Cerrada'};const c=document.createElement('div');c.className='lot-chip'+(st==='closed'?' disabled':'');c.innerHTML=`<div class="lc-name">${l.nombre}</div><div class="lc-hora">${l.hora}</div><div class="lc-st ${sC[st]}">${sL[st]}</div>`;if(st!=='closed'){c.onclick=()=>{document.querySelectorAll('.lot-chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');selLot=l;document.getElementById('lot-badge').textContent=l.nombre;updBtn();};}row.appendChild(c);});}
+
+// ── MODO ──
+function setModo(m,btn){modo=m;document.querySelectorAll('.modo-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');numA='';renderNum();const pi=document.getElementById('pos-ind');if(m===4){pi.style.display='flex';document.getElementById('num-title').textContent='Número — 4 cifras configuradas';document.getElementById('nd-tipo').innerHTML='Ingresa <strong>4</strong> dígitos';document.getElementById('nd-num').innerHTML='<span class="nd-ph">– – – –</span>';updPI();}else{pi.style.display='none';document.getElementById('num-title').textContent='Número — 3 cifras libre';document.getElementById('nd-tipo').innerHTML='Ingresa <strong>3</strong> dígitos';document.getElementById('nd-num').innerHTML='<span class="nd-ph">– – –</span>';}updBtn();}
+
+// ── TECLADO ──
+function kp(d){if(numA.length>=modo)return;if(modo===4){const pos=numA.length,rule=CFG.pos4[pos];if(rule.m==='fijo'&&rule.v&&d!==rule.v.trim()){showToast('err','No permitido',`Posición ${pos+1}: solo "${rule.v}"`);return;}if(rule.m==='lista'){const l=rule.v.split(',').map(x=>x.trim()).filter(Boolean);if(l.length>0&&!l.includes(d)){showToast('err','No permitido',`Posición ${pos+1}: permitidos ${l.join(', ')}`);return;}}}numA+=d;renderNum();if(modo===4)updPI();updBtn();}
+function kd(){numA=numA.slice(0,-1);renderNum();if(modo===4)updPI();updBtn();}
+function kc(){numA='';renderNum();if(modo===4)updPI();updBtn();}
+function renderNum(){const el=document.getElementById('nd-num');if(!numA){el.innerHTML=modo===4?'<span class="nd-ph">– – – –</span>':'<span class="nd-ph">– – –</span>';return;}el.textContent=numA.split('').join(' ');}
+function updPI(){for(let i=0;i<4;i++){const el=document.getElementById('pi-'+i);const r=CFG.pos4[i];let hint=r.m!=='libre'&&r.v?`[${r.v}]`:'';el.className='pos-ind'+(i<numA.length?' filled':'')+(i===numA.length?' editing':'');el.innerHTML=`<div class="pi-lbl">${['MIL','CEN','DEC','UNI'][i]}${hint?'<br><span style="font-size:.5rem">'+hint+'</span>':''}</div><div class="pi-num">${numA[i]||'–'}</div>`;}}
+
+// ── MONTOS ──
+const MQ=[500,1000,2000,5000,10000,20000];
+function renderMontos(){const row=document.getElementById('mc-row');row.innerHTML='';MQ.filter(m=>m<=CFG.montoMax).forEach(m=>{const b=document.createElement('button');b.className='mc';b.textContent='$'+m.toLocaleString('es-CO');b.onclick=()=>{document.querySelectorAll('.mc').forEach(c=>c.classList.remove('sel'));b.classList.add('sel');montoA=m;document.getElementById('mc-inp').value='';updBtn();};row.appendChild(b);});document.getElementById('min-lbl').textContent='$'+CFG.montoMin.toLocaleString('es-CO');document.getElementById('max-lbl').textContent='$'+CFG.montoMax.toLocaleString('es-CO');}
+function setMontoCustom(v){document.querySelectorAll('.mc').forEach(c=>c.classList.remove('sel'));montoA=Math.min(parseInt(v)||0,CFG.montoMax);updBtn();}
+
+// ── CARRITO ──
+function addCarrito(){
+  if(!selLot){showToast('err','Error','Selecciona una lotería');return;}
+  if(numA.length<modo){showToast('err','Error',`Ingresa ${modo} dígitos`);return;}
+  if(montoA<CFG.montoMin){showToast('err','Error',`Monto mínimo $${CFG.montoMin.toLocaleString('es-CO')}`);return;}
+  if(montoA>CFG.montoMax){showToast('err','Error',`Monto máximo $${CFG.montoMax.toLocaleString('es-CO')}`);return;}
+  const nom=document.getElementById('c-nom').value.trim(), cel=document.getElementById('c-cel').value.trim();
+  if(!nom||!cel){showToast('err','Error','Ingresa nombre y celular del comprador');return;}
+  carrito.push({id:Date.now(),numero:numA,lot:selLot,monto:montoA,nom,cel,modo});
+  renderCarrito(); kc(); montoA=0;
+  document.querySelectorAll('.mc').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('mc-inp').value='';
+  document.getElementById('c-nom').value='';
+  document.getElementById('c-cel').value='';
+  updBtn();
+  showToast('suc','Agregado',`Número ${carrito[carrito.length-1].numero} al carrito`);
+}
+function renderCarrito(){
+  const body=document.getElementById('cart-body');
+  document.getElementById('cart-badge').textContent=carrito.length+(carrito.length===1?' jugada':' jugadas');
+  if(!carrito.length){body.innerHTML='<div class="cart-empty"><div class="ico">🎰</div>Sin jugadas aún</div>';updBtn();return;}
+  const total=carrito.reduce((s,i)=>s+i.monto,0);
+  body.innerHTML=carrito.map(it=>`<div class="ci"><div class="ci-num">${it.numero}</div><div class="ci-info"><div class="ci-lot">${it.lot.nombre}</div><div class="ci-det">$${it.monto.toLocaleString('es-CO')} · ${it.modo} cifras · ${it.nom}</div></div><button class="ci-del" onclick="rmCarrito(${it.id})">✕</button></div>`).join('')+`<div class="cart-total"><div class="ct-lbl">Total efectivo</div><div class="ct-val">$${total.toLocaleString('es-CO')}</div></div>`;
+  updBtn();
+}
+function rmCarrito(id){carrito=carrito.filter(i=>i.id!==id);renderCarrito();}
+function updBtn(){document.getElementById('btn-reg').disabled=carrito.length===0;}
+
+// ── CONFIRMAR ──
+function openConfirm(){
+  if(!carrito.length)return;
+  const total=carrito.reduce((s,i)=>s+i.monto,0);
+  document.getElementById('m-title').textContent='CONFIRMAR VENTA EN EFECTIVO';
+  document.getElementById('m-bd').innerHTML=`
+    <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:0.78rem;color:#4ade80">
+      💵 <strong>Cobrar en efectivo al cliente: $${total.toLocaleString('es-CO')}</strong>
+    </div>
+    <div class="conf-table">
+      ${carrito.map(it=>`<div class="conf-tr"><span>${it.numero} — ${it.lot.nombre} (${it.modo} cif.)</span><span>$${it.monto.toLocaleString('es-CO')}</span></div>`).join('')}
+      <div class="conf-tr" style="border-top:2px solid var(--border)"><span>TOTAL A COBRAR</span><span>$${total.toLocaleString('es-CO')}</span></div>
+    </div>
+    <button class="btn-g" onclick="confirmarVenta()">✅ Confirmar — Ya cobré el efectivo</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+function confirmarVenta(){
+  const ref='CYA'+Date.now().toString().slice(-8), total=carrito.reduce((s,i)=>s+i.monto,0), items=carrito.map(i=>i.numero).join(', ');
+  carrito.forEach(it=>ventas.unshift({id:ref+'_'+it.id,numero:it.numero,loteria:it.lot.nombre,monto:it.monto,nom:it.nom,cel:it.cel,modo:it.modo,estado:'cobrado',fecha:new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),vendedor:cu.login}));
+  carrito=[]; renderCarrito(); updBtn();
+  document.getElementById('m-title').textContent='¡VENTA REGISTRADA!';
+  document.getElementById('m-bd').innerHTML=`<div class="success-wrap"><div class="s-icon">✅</div><div class="s-title">LISTO</div><div class="s-ref">${ref}</div><div class="s-detail">Números: <strong>${items}</strong><br>Total cobrado: <strong>$${total.toLocaleString('es-CO')} efectivo</strong></div><div class="s-ef">💵 Dinero recibido en efectivo<br>Venta guardada en el sistema</div></div>`;
+  showToast('suc','Venta registrada',`Ref ${ref} — $${total.toLocaleString('es-CO')}`);
+}
+
+// ════════════════════════════════════════════
+//  RESULTADOS — conectado al servidor Node.js
+// ════════════════════════════════════════════
+async function cargarResultados(forzar=false) {
+  const ico=document.getElementById('ref-ico');
+  ico.classList.add('spin');
+  setSt('loading','Cargando resultados desde loteriasdehoy.co...');
+
+  try {
+    const url = forzar ? `${API}/api/actualizar` : `${API}/api/resultados`;
+    const method = forzar ? 'POST' : 'GET';
+    const resp = await fetch(url, { method });
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const data = await resp.json();
+
+    if(data.resultados && data.resultados.length > 0){
+      renderRes(data.resultados);
+      const ult = data.ultimaActualizacion
+        ? new Date(data.ultimaActualizacion).toLocaleString('es-CO',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+        : '—';
+      document.getElementById('res-meta').textContent=`Fuente: loteriasdehoy.co · Actualizado: ${ult}`;
+      setSt('ok',`${data.total||data.resultados.length} resultados · próxima actualización: 6am, 2pm, 10pm`);
+    } else {
+      throw new Error('Sin datos');
+    }
+  } catch(e) {
+    setSt('error','No se pudo conectar con el servidor. Verifica que Node.js esté corriendo.');
+    document.getElementById('res-empty').style.display='';
+    showToast('err','Sin conexión','Verifica que el servidor esté activo');
+  }
+
+  ico.classList.remove('spin');
+  document.getElementById('res-fecha').textContent = new Date().toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+}
+
+function setSt(t,msg){
+  const d=document.getElementById('sdot');
+  d.className='sdot'+(t==='loading'?' loading':t==='error'?' error':'');
+  document.getElementById('stxt').textContent=msg;
+}
+
+function renderRes(datos){
+  document.getElementById('res-empty').style.display='none';
+  const chances=datos.filter(d=>d.tipo==='chance');
+  const lots=datos.filter(d=>d.tipo==='loteria');
+
+  const mkCard=(r,i)=>{const el=document.createElement('div');el.className='rc';el.style.animationDelay=(i*.03)+'s';el.innerHTML=`<div class="rc-hd"><div class="rc-name">${r.nombre}</div><div class="lc-st st-c">Resultado</div></div><div class="rc-body"><div class="rc-num">${r.numero}</div>${r.sub?`<div class="rc-sub">${r.sub}</div>`:''}<div class="rc-date">${r.fecha}</div></div>`;return el;};
+
+  const gc=document.getElementById('chances-grid'), gl=document.getElementById('loterias-grid');
+  gc.innerHTML=''; gl.innerHTML='';
+  chances.forEach((r,i)=>gc.appendChild(mkCard(r,i)));
+  lots.forEach((r,i)=>gl.appendChild(mkCard(r,i)));
+  document.getElementById('chances-wrap').style.display=chances.length?'':'none';
+  document.getElementById('loterias-wrap').style.display=lots.length?'':'none';
+}
+
+async function forzarActualizacion(){
+  const el=document.getElementById('adm-api-st');
+  el.textContent='⏳ Actualizando...';
+  try{
+    const r=await fetch(`${API}/api/actualizar`,{method:'POST'});
+    const d=await r.json();
+    el.textContent=d.ok?`✅ ${d.total} resultados actualizados`:'❌ Error al actualizar';
+    if(d.ok) showToast('suc','Actualizado',`${d.total} resultados cargados`);
+  }catch(e){el.textContent='❌ No se pudo conectar al servidor';}
+}
+
+// ── VENTAS ──
+function renderVentas(){
+  const list=document.getElementById('ventas-list');
+  const mis=ventas.filter(v=>v.vendedor===cu.login||cu.rol==='admin');
+  if(!mis.length){list.innerHTML='<div class="vt-empty">Sin ventas registradas hoy</div>';document.getElementById('vs-c').textContent='0';document.getElementById('vs-m').textContent='$0';document.getElementById('vs-com').textContent='$0';return;}
+  const total=mis.reduce((s,v)=>s+v.monto,0), com=Math.floor(total*CFG.comisionPct/100);
+  document.getElementById('vs-c').textContent=mis.length;
+  document.getElementById('vs-m').textContent='$'+total.toLocaleString('es-CO');
+  document.getElementById('vs-com').textContent='$'+com.toLocaleString('es-CO');
+  list.innerHTML=mis.map(v=>`<div class="vt-row"><div class="vt-num">${v.numero}</div><div><div style="font-size:.8rem">${v.loteria}</div><div style="font-size:.68rem;color:var(--muted2)">${v.fecha}</div></div><div style="font-family:'JetBrains Mono',monospace;font-size:.78rem">$${v.monto.toLocaleString('es-CO')}</div><div style="font-size:.7rem;color:var(--muted2)">${v.modo} cifras</div><div><span class="badge b-ef">efectivo</span></div></div>`).join('');
+}
+
+// ── ADMIN CONFIG ──
+function saveConfig(){CFG.montoMax=parseInt(document.getElementById('cfg-max').value)||20000;CFG.montoMin=parseInt(document.getElementById('cfg-min').value)||500;CFG.comisionPct=parseInt(document.getElementById('cfg-com').value)||5;for(let i=0;i<4;i++){CFG.pos4[i].m=document.getElementById('p'+i+'-m').value;CFG.pos4[i].v=document.getElementById('p'+i+'-v').value;}renderMontos();if(modo===4)updPI();showToast('suc','Guardado','Configuración actualizada');}
+function loadCfgUI(){document.getElementById('cfg-max').value=CFG.montoMax;document.getElementById('cfg-min').value=CFG.montoMin;document.getElementById('cfg-com').value=CFG.comisionPct;for(let i=0;i<4;i++){document.getElementById('p'+i+'-m').value=CFG.pos4[i].m;document.getElementById('p'+i+'-v').value=CFG.pos4[i].v;}}
+
+// ── USUARIOS ──
+function renderUsers(){document.getElementById('users-tb').innerHTML=USERS.map(u=>`<tr><td><code style="font-size:.72rem;color:var(--muted2)">${u.login}</code></td><td style="font-size:.8rem">${u.nombre}</td><td><span class="urole r-${u.rol==='admin'?'adm':'ven'}">${u.rol}</span></td><td><button class="btn-sm d" onclick="delUser(${u.id})">Eliminar</button></td></tr>`).join('');}
+function toggleNuevo(){const p=document.getElementById('nuevo-panel');p.style.display=p.style.display==='none'?'':'none';}
+function addUser(){const l=document.getElementById('nu-l').value.trim(),n=document.getElementById('nu-n').value.trim(),p=document.getElementById('nu-p').value,r=document.getElementById('nu-r').value;if(!l||!n||!p){showToast('err','Error','Completa todos los campos');return;}if(USERS.find(u=>u.login===l)){showToast('err','Error','Ese usuario ya existe');return;}USERS.push({id:Date.now(),login:l,pass:p,nombre:n,rol:r});renderUsers();document.getElementById('nu-l').value='';document.getElementById('nu-n').value='';document.getElementById('nu-p').value='';showToast('suc','Listo',`"${l}" puede ingresar ahora`);}
+function delUser(id){if(id===cu.id){showToast('err','Error','No puedes eliminarte a ti mismo');return;}USERS=USERS.filter(u=>u.id!==id);renderUsers();}
+
+// ── MODAL ──
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===document.getElementById('modal'))closeModal();});
+
+// ── TOASTS ──
+function showToast(type,title,msg){const ico={suc:'✅',err:'❌',inf:'ℹ️'};const tw=document.getElementById('tw');const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=`<div class="ti">${ico[type]}</div><div class="tt"><strong>${title}</strong><span>${msg}</span></div>`;tw.appendChild(t);setTimeout(()=>{t.classList.add('hide');setTimeout(()=>t.remove(),250);},3800);}
+
+// Auto-refresh resultados cada 5 min si la pestaña está abierta
+setInterval(()=>{if(document.getElementById('tab-resultados').style.display!=='none')cargarResultados(false);},300000);
+</script>
+</body>
+</html>
