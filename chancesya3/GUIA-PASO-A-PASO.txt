@@ -1,0 +1,115 @@
+# ChancesYA — Guía Completa Sin Código
+# Sigue estos pasos en orden y en 20 minutos tienes todo funcionando
+
+═══════════════════════════════════════
+ PASO 1 — CREAR CUENTA EN SUPABASE
+ (Base de datos gratis — guarda tus ventas)
+═══════════════════════════════════════
+
+1. Ve a: https://supabase.com
+2. Clic en "Start your project" (botón verde)
+3. Regístrate con Google o con tu email
+4. Clic en "New project"
+5. Llena así:
+   - Name: chancesya
+   - Database Password: (pon una contraseña fuerte, anótala)
+   - Region: South America (São Paulo)
+6. Clic "Create new project" — espera 2 minutos
+
+7. Cuando cargue, en el menú izquierdo clic en "SQL Editor"
+8. Clic en "New query"
+9. COPIA TODO el contenido del archivo supabase-tablas.sql
+10. PÉGALO en el editor y clic "Run" (botón verde)
+    → Debe decir "Success. No rows returned"
+
+11. Ahora ve a: Settings → API (menú izquierdo)
+12. Anota estos dos valores (los necesitas en el paso 3):
+    - Project URL: https://xxxx.supabase.co
+    - anon/public key: eyJhbGci... (es muy largo)
+
+═══════════════════════════════════════
+ PASO 2 — SUBIR ARCHIVOS A GITHUB
+═══════════════════════════════════════
+
+1. Ve a: https://github.com y entra a tu cuenta
+2. Abre el repositorio "chancesya" que ya tienes
+3. Borra los archivos viejos (si los hay)
+4. Sube estos archivos de la carpeta chancesya3:
+   - server.js
+   - package.json
+   - supabase-tablas.sql
+   - La carpeta "public" con el index.html adentro
+
+   Para subir: clic en "Add file" → "Upload files"
+
+═══════════════════════════════════════
+ PASO 3 — CONFIGURAR RAILWAY
+ (El servidor que corre todo)
+═══════════════════════════════════════
+
+1. Ve a: https://railway.app y entra
+2. Abre tu proyecto de chancesya
+3. Clic en el servicio de tu app
+4. Clic en la pestaña "Variables"
+5. Agrega estas dos variables (clic en "Add Variable"):
+
+   SUPABASE_URL = (pega tu Project URL del paso 1)
+   SUPABASE_KEY = (pega tu anon key del paso 1)
+
+6. Railway redespliega automáticamente en ~1 minuto
+7. Ve a la pestaña "Settings" → "Domains"
+   → Copia tu link público (tipo: chancesya.up.railway.app)
+
+═══════════════════════════════════════
+ PASO 4 — VERIFICAR QUE FUNCIONA
+═══════════════════════════════════════
+
+1. Abre tu link de Railway en el navegador
+2. Entra con: admin / admin123
+3. Registra una venta de prueba
+4. Ve a Supabase → Table Editor → ventas
+   → Debes ver la venta guardada ahí ✅
+
+═══════════════════════════════════════
+ USUARIOS INICIALES
+═══════════════════════════════════════
+
+ admin     / admin123   (Administrador)
+ vendedor1 / vend123    (Vendedor)
+ vendedor2 / vend456    (Vendedor)
+
+ ⚠️ CAMBIA LAS CONTRASEÑAS:
+ En Supabase → Table Editor → usuarios
+ → Edita cada fila y cambia el campo "password"
+
+═══════════════════════════════════════
+ QUÉ QUEDA GUARDADO PARA SIEMPRE
+═══════════════════════════════════════
+
+ ✅ Todas las ventas con fecha y hora
+ ✅ Qué vendedor hizo cada venta
+ ✅ Nombre y celular del comprador
+ ✅ Número jugado y lotería
+ ✅ Monto cobrado
+ ✅ Configuración (montos, reglas 4 cifras)
+ ✅ Lista de vendedores
+
+═══════════════════════════════════════
+ RESULTADOS AUTOMÁTICOS
+═══════════════════════════════════════
+
+ El servidor descarga los resultados reales
+ de loteriasdehoy.co automáticamente:
+
+ → 6:00 AM  (chances mañana)
+ → 2:00 PM  (chances tarde)
+ → 10:00 PM (chances noche)
+
+ Sin que hagas nada. Todos los días del año.
+
+═══════════════════════════════════════
+ ¿ALGO NO FUNCIONA?
+═══════════════════════════════════════
+
+ En Railway → tu servicio → pestaña "Logs"
+ Ahí ves exactamente qué está pasando.
